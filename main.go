@@ -6,6 +6,7 @@ import (
     "log"
     "net/http"
     "net/smtp"
+    "os"
 )
 
 // Estrutura para a mensagem recebida do site
@@ -16,11 +17,11 @@ type Message struct {
 
 // Configurações do servidor SMTP (Gmail)
 const (
-    smtpHost     = "smtp.gmail.com"
-    smtpPort     = "587"
-    senderEmail  = "petrusvini.ar@gmail.com" // Seu e-mail do Gmail
-    senderPass   = "qgml ysbs wncn kgqg"         // Sua Senha de App
-    recipient    = "petrusvini.ar@gmail.com"  // E-mail que receberá a mensagem
+	smtpHost     = "smtp.gmail.com"
+	smtpPort     = "587"
+	senderEmail  = "petrusvini.ar@gmail.com" // Seu e-mail do Gmail
+	senderPass   = "qgml ysbs wncn kgqg"         // Sua Senha de App
+	recipient    = "petrusvini.ar@gmail.com"  // E-mail que receberá a mensagem
 )
 
 // Função para enviar e-mail
@@ -63,9 +64,13 @@ func main() {
     // Definir a rota
     http.HandleFunc("/send-message", sendMessageHandler)
 
-    // Iniciar o servidor na porta 8080
-    log.Println("Servidor rodando em http://localhost:8080")
-    if err := http.ListenAndServe(":8080", nil); err != nil {
+    // Iniciar o servidor na porta fornecida pelo Render (ou 8080 localmente)
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080" // Porta padrão para testes locais
+    }
+    log.Println("Servidor rodando na porta", port)
+    if err := http.ListenAndServe(":"+port, nil); err != nil {
         log.Fatalf("Erro ao iniciar servidor: %v", err)
     }
 }
