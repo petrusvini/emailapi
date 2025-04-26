@@ -7,6 +7,8 @@ import (
     "net/http"
     "net/smtp"
     "os"
+
+    "github.com/rs/cors" // Adicione esta linha
 )
 
 // Estrutura para a mensagem recebida do site
@@ -61,8 +63,20 @@ func sendMessageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    // Definir a rota
-    http.HandleFunc("/send-message", sendMessageHandler)
+    // Criar um novo mux (roteador)
+    mux := http.NewServeMux()
+    mux.HandleFunc("/send-message", sendMessageHandler)
+
+    // Configurar o middleware CORS
+    c := cors.New(cors.Options{
+        AllowedOrigins:   []string{"*"}, // Permite todas as origens (ajuste para maior segurança em produção)
+        AllowedMethods:   []string{"POST"}, // Permite apenas POST
+        AllowedHeaders:   []string{"Content-Type"}, // Permite o header Content-Type
+        AllowCredentials: false,
+    })
+
+    // Aplicar o middleware CORS ao roteador
+    handler := c.Handler(mux)
 
     // Iniciar o servidor na porta fornecida pelo Render (ou 8080 localmente)
     port := os.Getenv("PORT")
@@ -70,7 +84,7 @@ func main() {
         port = "8080" // Porta padrão para testes locais
     }
     log.Println("Servidor rodando na porta", port)
-    if err := http.ListenAndServe(":"+port, nil); err != nil {
+    if err := http.ListenAndServe(":"+port, handler); err != nil {
         log.Fatalf("Erro ao iniciar servidor: %v", err)
     }
 }
